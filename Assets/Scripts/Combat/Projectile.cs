@@ -32,13 +32,22 @@ namespace HY3RIDOrigins.Combat
             if (other.gameObject.CompareTag(ownerTag)) return;
 
             var target = other.GetComponentInParent<IDamageable>();
-            target?.TakeDamage(damage);
 
-            // Visible impact: larger flash on a living target, small spark on a wall
             if (target != null)
+            {
+                // Ask the hit character whether the bullet came from their front.
+                // This activates front-facing passives (e.g. Leonidas' Resilience).
+                // Characters with DamageReductionFront = 0 are unaffected regardless.
+                var character  = other.GetComponentInParent<HY3RIDOrigins.Characters.Character>();
+                bool fromFront = character != null && character.IsFacingToward(transform.position);
+                target.TakeDamage(damage, fromFront);
                 HitEffect.Spawn(transform.position, 0.30f, Color.white, 0.09f);
+            }
             else
+            {
+                // Wall or obstacle — no damage, spark only
                 HitEffect.Spawn(transform.position, 0.12f, new Color(0.9f, 0.75f, 0.4f), 0.06f);
+            }
 
             Destroy(gameObject);
         }

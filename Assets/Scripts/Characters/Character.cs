@@ -152,6 +152,18 @@ namespace HY3RIDOrigins.Characters
             gameObject.SetActive(false);
         }
 
+        // --- Geometry helpers ---
+
+        // True when attackerWorldPos is within ±60° of this character's facing direction.
+        // Used by Projectile to determine whether the hit activates front-facing passives
+        // (e.g. Leonidas' Resilience — 15% damage reduction from frontal attacks).
+        public bool IsFacingToward(Vector2 attackerWorldPos)
+        {
+            Vector2 toAttacker = (attackerWorldPos - (Vector2)transform.position).normalized;
+            Vector2 facing     = new Vector2(Mathf.Cos(facingAngle), Mathf.Sin(facingAngle));
+            return Vector2.Dot(facing, toAttacker) > 0.5f; // true inside the ±60° front cone
+        }
+
         // --- Accessors ---
 
         public float Hp => currentHp;

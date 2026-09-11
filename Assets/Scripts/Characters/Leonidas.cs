@@ -62,16 +62,5 @@ namespace HY3RIDOrigins.Characters
                 UnityEngine.Debug.Log("[Leonidas] PHALANX — team ability (Phase 6)");
         }
 
-        // Called by Phase 2 when a weapon fires to check front-facing damage reduction.
-        public bool IsFacingToward(Vector2 attackerWorldPos)
-        {
-            Vector2 toAttacker = (attackerWorldPos - (Vector2)transform.position).normalized;
-            Vector2 facing = new Vector2(
-                Mathf.Cos(facingAngle),
-                Mathf.Sin(facingAngle)
-            );
-            // Front-facing if the attacker is within ±60° of our facing direction.
-            return Vector2.Dot(facing, toAttacker) > 0.5f;
-        }
     }
 }
