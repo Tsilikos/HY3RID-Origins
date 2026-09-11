@@ -63,7 +63,7 @@ namespace HY3RIDOrigins.UI
 
         private static Vector2 ToWorld(Vector2 screenPos)
         {
-            var cam = Camera.main;
+            var cam = UnityEngine.Camera.main;
             if (cam == null) return screenPos;
             return cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, cam.nearClipPlane));
         }
