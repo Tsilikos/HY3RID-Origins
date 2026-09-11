@@ -4,6 +4,7 @@ using HY3RIDOrigins.Characters;
 using HY3RIDOrigins.Combat;
 using HY3RIDOrigins.Data;
 using HY3RIDOrigins.Testing;
+using HY3RIDOrigins.Visibility;
 
 namespace HY3RIDOrigins.Rooms
 {
@@ -21,6 +22,7 @@ namespace HY3RIDOrigins.Rooms
             // LabRoomBuilder.Awake() already ran — SpawnPoint is guaranteed set.
             SpawnLeonidas();
             SpawnTestTargets();
+            SpawnSecondLightEntity();
         }
 
         private void SpawnLeonidas()
@@ -60,6 +62,9 @@ namespace HY3RIDOrigins.Rooms
             var dodger  = go.AddComponent<DodgeController>();
             holder.SetWeapons(pistol, spear);
 
+            // ── Visibility ───────────────────────────────────────────────────────
+            go.AddComponent<VisibilityLight>(); // cool-white flashlight cone driven by FacingAngle
+
             // ── Camera ───────────────────────────────────────────────────────────
             if (labCamera != null)
                 labCamera.SetTarget(go.transform);
@@ -76,6 +81,36 @@ namespace HY3RIDOrigins.Rooms
             SpawnTarget(new Vector2( 10f,   6f));  // right mid-area
             SpawnTarget(new Vector2(  0f,  10f));  // upper center
             SpawnTarget(new Vector2(-14f, -10f));  // lower-left open area
+        }
+
+        // A second character entity with its own VisibilityLight, proving VisibilityLight
+        // works on any Character — not just the player-controlled Leonidas.
+        private void SpawnSecondLightEntity()
+        {
+            var go = new GameObject("LightBeacon_01");
+            go.transform.position = new Vector3(-15f, 8f, 0f); // left machinery area
+
+            // Rigidbody/collider required by Character — set static so it doesn't move.
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.bodyType     = RigidbodyType2D.Static;
+            rb.gravityScale = 0f;
+            rb.freezeRotation = true;
+
+            go.AddComponent<CircleCollider2D>();
+
+            // Small amber circle sprite — visually distinguishes it from test targets.
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite = SpriteUtil.Circle(8, new Color(1.0f, 0.70f, 0.20f, 1f)); // amber
+            sr.sortingOrder = 5;
+
+            // Plain Character (no input controller) — proves VisibilityLight is player-agnostic.
+            var beacon = go.AddComponent<Character>();
+            beacon.Initialize(CharacterData.Leonidas);
+            beacon.FaceAngle(Mathf.PI * 0.75f); // upper-left, diagonal into the room interior
+
+            // Warm amber cone — distinguishes it from Leonidas' cool-white cone.
+            var vl = go.AddComponent<VisibilityLight>();
+            vl.SetColor(new Color(1.0f, 0.70f, 0.20f, 1f));
         }
 
         private static void SpawnTarget(Vector2 pos)

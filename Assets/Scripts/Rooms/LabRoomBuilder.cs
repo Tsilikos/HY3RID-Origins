@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using HY3RIDOrigins.Camera;
 
 namespace HY3RIDOrigins.Rooms
@@ -120,6 +121,9 @@ namespace HY3RIDOrigins.Rooms
             // Static rigidbody to work with composite colliders
             var rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Static;
+
+            // Phase 3: cast shadows for the URP 2D visibility system.
+            go.AddComponent<ShadowCaster2D>();
         }
 
         // --- Obstacles ---
@@ -198,6 +202,8 @@ namespace HY3RIDOrigins.Rooms
 
             var rb = go.AddComponent<Rigidbody2D>();
             rb.bodyType = RigidbodyType2D.Static;
+
+            go.AddComponent<ShadowCaster2D>();
         }
 
         // --- Sprite Factories ---
