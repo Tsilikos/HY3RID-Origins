@@ -40,7 +40,7 @@ namespace HY3RIDOrigins.Rooms
             // Fall back to FindObjectOfType when labCamera is not wired via Inspector.
             var cam = labCamera != null
                 ? labCamera
-                : FindObjectOfType<HY3RIDOrigins.Camera.LabCamera>();
+                : FindAnyObjectByType<HY3RIDOrigins.Camera.LabCamera>();
 
             if (cam != null)
             {

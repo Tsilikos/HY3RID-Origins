@@ -9,7 +9,7 @@ namespace HY3RIDOrigins.DevTools
     public class DebugConsole : MonoBehaviour
     {
         [Header("Dev Controls")]
-        [SerializeField] private bool enableInBuild = false; // Off in release builds
+        [SerializeField] private bool enableInBuild; // Off in release builds — toggled from Inspector
 
         private bool visible = false;
         private GUIStyle boxStyle;
@@ -30,11 +30,19 @@ namespace HY3RIDOrigins.DevTools
 
             if (!visible) return;
 
-            if (kb != null && kb.iKey.wasPressedThisFrame)
+            // G = toggle god mode (permanent invulnerability override)
+            if (kb != null && kb.gKey.wasPressedThisFrame)
             {
                 InvulnerabilityOn = !InvulnerabilityOn;
                 LeonidassRef?.SetInvulnerable(InvulnerabilityOn);
-                UnityEngine.Debug.Log($"[Debug] Invulnerability: {InvulnerabilityOn}");
+                UnityEngine.Debug.Log($"[Debug] God mode: {InvulnerabilityOn}");
+            }
+
+            // I = apply 15 test damage (respects invulnerability — use to verify dodge i-frames)
+            if (kb != null && kb.iKey.wasPressedThisFrame)
+            {
+                LeonidassRef?.TakeDamage(15f);
+                UnityEngine.Debug.Log("[Debug] Applied 15 test damage");
             }
         }
 
@@ -70,7 +78,8 @@ namespace HY3RIDOrigins.DevTools
                   $"  Invuln: {InvulnerabilityOn}\n\n" +
                   $"Keys\n" +
                   $"  ` = toggle this panel\n" +
-                  $"  I = toggle invulnerability";
+                  $"  G = toggle god mode (invuln)\n" +
+                  $"  I = apply 15 test damage";
 
             GUI.Box(new Rect(10, 10, 280, 180), "");
             GUI.Label(new Rect(16, 16, 270, 170), info, labelStyle);

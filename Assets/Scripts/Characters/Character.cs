@@ -1,4 +1,5 @@
 using UnityEngine;
+using HY3RIDOrigins.Combat;
 using HY3RIDOrigins.Data;
 
 namespace HY3RIDOrigins.Characters
@@ -8,7 +9,7 @@ namespace HY3RIDOrigins.Characters
     // Does NOT handle input — that is the responsibility of PlayerController or AIController.
     [RequireComponent(typeof(Rigidbody2D))]
     [RequireComponent(typeof(CircleCollider2D))]
-    public class Character : MonoBehaviour
+    public class Character : MonoBehaviour, IDamageable
     {
         [Header("Definition")]
         [SerializeField] protected Stats stats;
@@ -18,6 +19,9 @@ namespace HY3RIDOrigins.Characters
         protected float currentShield;
         protected bool isInvulnerable;
         protected float facingAngle; // radians, 0 = right, PI/2 = up
+
+        // Set by DodgeController (or any ability) to suppress normal movement input.
+        public bool ControlsLocked { get; set; }
 
         protected Rigidbody2D rb;
         protected CircleCollider2D col;
@@ -123,6 +127,22 @@ namespace HY3RIDOrigins.Characters
         public virtual void SetInvulnerable(bool value)
         {
             isInvulnerable = value;
+        }
+
+        // Grants invulnerability for exactly `duration` seconds, then clears it.
+        // Used by DodgeController and any future ability with i-frames.
+        public void StartTimedInvulnerability(float duration)
+        {
+            StartCoroutine(InvulnTimer(duration));
+        }
+
+        private System.Collections.IEnumerator InvulnTimer(float duration)
+        {
+            isInvulnerable = true;
+            yield return new WaitForSeconds(duration);
+            // Only clear if DebugConsole god-mode hasn't overridden it
+            if (!HY3RIDOrigins.DevTools.DebugConsole.InvulnerabilityOn)
+                isInvulnerable = false;
         }
 
         protected virtual void OnDeath()

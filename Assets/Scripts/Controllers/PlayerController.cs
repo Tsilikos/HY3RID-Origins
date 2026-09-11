@@ -14,12 +14,14 @@ namespace HY3RIDOrigins.Controllers
         public Vector2 MoveInput { get; private set; }
         public Vector2 AimWorldPosition { get; private set; }
 
-        public bool FireDown      { get; private set; } // left mouse
-        public bool FireHeld      { get; private set; }
-        public bool SpearDown     { get; private set; } // right mouse
-        public bool SpearHeld     { get; private set; }
-        public bool DodgeJustDown { get; private set; } // space
-        public bool ActiveJustDown { get; private set; } // Q
+        public bool FireDown        { get; private set; } // LMB pressed this frame
+        public bool FireHeld        { get; private set; } // LMB held
+        public bool SpearDown       { get; private set; } // RMB pressed this frame
+        public bool SpearHeld       { get; private set; } // RMB held
+        public bool SpearJustUp     { get; private set; } // RMB released this frame
+        public bool DodgeJustDown   { get; private set; } // Space
+        public bool ReloadJustDown  { get; private set; } // R
+        public bool ActiveJustDown  { get; private set; } // Q
         public bool PhalanxJustDown { get; private set; } // F
 
         private UnityEngine.Camera mainCam;
@@ -68,25 +70,27 @@ namespace HY3RIDOrigins.Controllers
 
             if (mouse != null)
             {
-                FireDown  = mouse.leftButton.wasPressedThisFrame;
-                FireHeld  = mouse.leftButton.isPressed;
-                SpearDown = mouse.rightButton.wasPressedThisFrame;
-                SpearHeld = mouse.rightButton.isPressed;
+                FireDown    = mouse.leftButton.wasPressedThisFrame;
+                FireHeld    = mouse.leftButton.isPressed;
+                SpearDown   = mouse.rightButton.wasPressedThisFrame;
+                SpearHeld   = mouse.rightButton.isPressed;
+                SpearJustUp = mouse.rightButton.wasReleasedThisFrame;
             }
             else
             {
-                FireDown = FireHeld = SpearDown = SpearHeld = false;
+                FireDown = FireHeld = SpearDown = SpearHeld = SpearJustUp = false;
             }
 
             if (kb != null)
             {
                 DodgeJustDown   = kb.spaceKey.wasPressedThisFrame;
+                ReloadJustDown  = kb.rKey.wasPressedThisFrame;
                 ActiveJustDown  = kb.qKey.wasPressedThisFrame;
                 PhalanxJustDown = kb.fKey.wasPressedThisFrame;
             }
             else
             {
-                DodgeJustDown = ActiveJustDown = PhalanxJustDown = false;
+                DodgeJustDown = ReloadJustDown = ActiveJustDown = PhalanxJustDown = false;
             }
         }
 

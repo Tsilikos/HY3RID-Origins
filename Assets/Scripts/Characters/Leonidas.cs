@@ -44,20 +44,18 @@ namespace HY3RIDOrigins.Characters
 
         private void FixedUpdate()
         {
-            Move(input.MoveInput);
+            // DodgeController sets ControlsLocked during a slide
+            if (!ControlsLocked)
+                Move(input.MoveInput);
         }
 
         private void Update()
         {
+            // WeaponHolder and DodgeController read their own input each Update.
+            // Leonidas only needs to keep facing toward the mouse.
             FaceToward(input.AimWorldPosition);
 
-            // Log pending actions (implementations added in later phases).
-            if (input.FireDown)
-                UnityEngine.Debug.Log("[Leonidas] FIRE — pistol (Phase 2)");
-            if (input.SpearDown)
-                UnityEngine.Debug.Log("[Leonidas] SPEAR (Phase 2)");
-            if (input.DodgeJustDown)
-                UnityEngine.Debug.Log("[Leonidas] DODGE (Phase 2)");
+            // Phase 6 stubs — Phalanx logs remain until those systems are implemented
             if (input.ActiveJustDown)
                 UnityEngine.Debug.Log("[Leonidas] PHALANX ANCHOR — active ability (Phase 6)");
             if (input.PhalanxJustDown)
