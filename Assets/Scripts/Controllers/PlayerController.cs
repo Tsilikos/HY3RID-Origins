@@ -1,100 +1,93 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
+using HY3RIDOrigins.UI;
 
 namespace HY3RIDOrigins.Controllers
 {
-    // Reads WASD + mouse input and exposes clean query methods.
-    // Placed on the same GameObject as Leonidas.
-    // Uses the New Input System (UnityEngine.InputSystem) directly via
-    // Keyboard.current / Mouse.current — no Action Map asset required.
-    // Controller support: wire a Gamepad in Phase 8+ by reading Gamepad.current here.
+    /// Reads mobile touch input from VirtualJoystick, MobileAimInput, and MobileHUD
+    /// and exposes clean per-frame query properties.
+    /// Public API (names, types, semantics) is identical to the Phase 1–4 keyboard/mouse version.
+    /// Placed on the same GameObject as Leonidas.
     public class PlayerController : MonoBehaviour
     {
-        // Exposed so Leonidas can query per-frame.
-        public Vector2 MoveInput { get; private set; }
+        // ── Public API — unchanged from Phase 1–4 ────────────────────────────────
+
+        public Vector2 MoveInput        { get; private set; }
         public Vector2 AimWorldPosition { get; private set; }
 
-        public bool FireDown        { get; private set; } // LMB pressed this frame
-        public bool FireHeld        { get; private set; } // LMB held
-        public bool SpearDown       { get; private set; } // RMB pressed this frame
-        public bool SpearHeld       { get; private set; } // RMB held
-        public bool SpearJustUp     { get; private set; } // RMB released this frame
-        public bool DodgeJustDown   { get; private set; } // Space
-        public bool ReloadJustDown  { get; private set; } // R
-        public bool ActiveJustDown  { get; private set; } // Q
-        public bool PhalanxJustDown { get; private set; } // F
+        public bool FireDown        { get; private set; }
+        public bool FireHeld        { get; private set; }
+        public bool SpearDown       { get; private set; }
+        public bool SpearHeld       { get; private set; }
+        public bool SpearJustUp     { get; private set; }
+        public bool DodgeJustDown   { get; private set; }
+        public bool ReloadJustDown  { get; private set; } // always false — reload is automatic
+        public bool ActiveJustDown  { get; private set; } // always false — Phase 6+
+        public bool PhalanxJustDown { get; private set; } // always false — Phase 6+
 
-        private UnityEngine.Camera mainCam;
+        // ── Private references ────────────────────────────────────────────────────
+
+        private MobileHUD      _hud;
+        private VirtualJoystick _joystick;
+        private MobileAimInput  _aimInput;
+
+        // ── Awake ─────────────────────────────────────────────────────────────────
 
         private void Awake()
         {
-            mainCam = UnityEngine.Camera.main;
+            // MobileHUD bootstraps itself (and creates VirtualJoystick + MobileAimInput)
+            // when PlayerController is constructed. If the HUD already exists in the scene,
+            // we reuse it; otherwise we create it here.
+            _hud = FindAnyObjectByType<MobileHUD>();
+            if (_hud == null)
+            {
+                var hudGO = new GameObject("MobileHUD");
+                _hud = hudGO.AddComponent<MobileHUD>(); // MobileHUD.Awake() runs immediately
+            }
+
+            _joystick = _hud.Joystick;
+            _aimInput = _hud.AimInput;
+
+            // Initialise aim to the right so Leonidas faces a sensible direction at spawn
+            AimWorldPosition = (Vector2)transform.position + Vector2.right;
         }
+
+        // ── Update ────────────────────────────────────────────────────────────────
 
         private void Update()
         {
-            ReadMoveInput();
-            ReadAimInput();
-            ReadActionInput();
-        }
+            if (_joystick != null)
+                MoveInput = _joystick.Value;
+            else
+                MoveInput = Vector2.zero;
 
-        private void ReadMoveInput()
-        {
-            var kb = Keyboard.current;
-            if (kb == null) { MoveInput = Vector2.zero; return; }
+            if (_aimInput != null)
+                AimWorldPosition = _aimInput.AimWorldPosition;
 
-            float x = 0f, y = 0f;
-            if (kb.aKey.isPressed) x -= 1f;
-            if (kb.dKey.isPressed) x += 1f;
-            if (kb.sKey.isPressed) y -= 1f;
-            if (kb.wKey.isPressed) y += 1f;
-
-            MoveInput = new Vector2(x, y).normalized;
-        }
-
-        private void ReadAimInput()
-        {
-            if (mainCam == null) return;
-
-            var mouse = Mouse.current;
-            if (mouse == null) return;
-
-            Vector2 screenPos = mouse.position.ReadValue();
-            AimWorldPosition = mainCam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, mainCam.nearClipPlane));
-        }
-
-        private void ReadActionInput()
-        {
-            var kb = Keyboard.current;
-            var mouse = Mouse.current;
-
-            if (mouse != null)
+            if (_hud != null)
             {
-                FireDown    = mouse.leftButton.wasPressedThisFrame;
-                FireHeld    = mouse.leftButton.isPressed;
-                SpearDown   = mouse.rightButton.wasPressedThisFrame;
-                SpearHeld   = mouse.rightButton.isPressed;
-                SpearJustUp = mouse.rightButton.wasReleasedThisFrame;
+                FireDown      = _hud.FireDown;
+                FireHeld      = _hud.FireHeld;
+                SpearDown     = _hud.SpearDown;
+                SpearHeld     = _hud.SpearHeld;
+                SpearJustUp   = _hud.SpearJustUp;
+                DodgeJustDown = _hud.DodgeJustDown;
             }
             else
             {
-                FireDown = FireHeld = SpearDown = SpearHeld = SpearJustUp = false;
+                FireDown = FireHeld = SpearDown = SpearHeld = SpearJustUp = DodgeJustDown = false;
             }
 
-            if (kb != null)
-            {
-                DodgeJustDown   = kb.spaceKey.wasPressedThisFrame;
-                ReloadJustDown  = kb.rKey.wasPressedThisFrame;
-                ActiveJustDown  = kb.qKey.wasPressedThisFrame;
-                PhalanxJustDown = kb.fKey.wasPressedThisFrame;
-            }
-            else
-            {
-                DodgeJustDown = ReloadJustDown = ActiveJustDown = PhalanxJustDown = false;
-            }
+            // These remain permanently false in Phase 4.5.
+            // ReloadJustDown: automatic reload wired in KineticPistol.TryFire — no button needed.
+            // ActiveJustDown / PhalanxJustDown: Phase 6+ abilities, no button yet.
+            ReloadJustDown  = false;
+            ActiveJustDown  = false;
+            PhalanxJustDown = false;
         }
 
-        // Angle (radians) from player toward mouse position.
+        // ── Utility ───────────────────────────────────────────────────────────────
+
+        /// Angle (radians) from player toward aim position. Unchanged from Phase 1–4.
         public float AimAngle(Vector2 fromWorldPos)
         {
             Vector2 dir = AimWorldPosition - fromWorldPos;
