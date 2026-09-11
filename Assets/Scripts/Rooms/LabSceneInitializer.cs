@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 using HY3RIDOrigins.Camera;
 using HY3RIDOrigins.Characters;
 using HY3RIDOrigins.Combat;
@@ -19,10 +20,11 @@ namespace HY3RIDOrigins.Rooms
 
         private void Start()
         {
-            // LabRoomBuilder.Awake() already ran — SpawnPoint is guaranteed set.
+            // LabRoomBuilder.Awake() already ran — SpawnPoint and DoorPosition are guaranteed set.
             SpawnLeonidas();
             SpawnTestTargets();
             SpawnSecondLightEntity();
+            SpawnGetterBasic();
         }
 
         private void SpawnLeonidas()
@@ -111,6 +113,41 @@ namespace HY3RIDOrigins.Rooms
             // Warm amber cone — distinguishes it from Leonidas' cool-white cone.
             var vl = go.AddComponent<VisibilityLight>();
             vl.SetColor(new Color(1.0f, 0.70f, 0.20f, 1f));
+        }
+
+        // Getter Basic — first enemy. Enters from the north-wall door, detects and shoots Leonidas.
+        private void SpawnGetterBasic()
+        {
+            var spawnPos = roomBuilder != null
+                ? roomBuilder.DoorPosition
+                : new Vector2(0f, 14f);
+
+            var go = new GameObject("GetterBasic");
+            go.tag = "Enemy"; // BEFORE any AddComponent — KineticPistol inherits this tag for bullets
+            go.transform.position = spawnPos;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = 10;
+            // Sprite set by GetterBasic.Start() after Initialize() provides the team color.
+
+            var rb = go.AddComponent<Rigidbody2D>();
+            rb.gravityScale           = 0f;
+            rb.freezeRotation         = true;
+            rb.interpolation          = RigidbodyInterpolation2D.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
+
+            go.AddComponent<CircleCollider2D>();
+
+            // Slower, weaker pistol than Leonidas — tuned for fair first-enemy feel.
+            var pistol = go.AddComponent<KineticPistol>();
+            pistol.Configure(newDamage: 12f, newFireRate: 2.5f, newReloadDuration: 2.0f);
+
+            go.AddComponent<GetterBasic>();
+            go.AddComponent<ShadowCaster2D>(); // enemy body occludes lights
+
+            // Red-tinted cone — visually signals danger.
+            var vl = go.AddComponent<VisibilityLight>();
+            vl.SetColor(new Color(1.0f, 0.30f, 0.20f, 1f));
         }
 
         private static void SpawnTarget(Vector2 pos)

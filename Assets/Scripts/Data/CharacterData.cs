@@ -86,6 +86,24 @@ namespace HY3RIDOrigins.Data
             dodgeIFrames: 0.10f,
             damageReductionFront: 0f
         );
+
+        // Phase 4 enemy: basic ranged attacker.
+        // dodge params all 0 — Getter Basic cannot dodge.
+        public static readonly Stats GetterBasic = new Stats(
+            id:          "getter_basic",
+            displayName: "Getter Basic",
+            role:        CharacterRole.Enemy,
+            teamColor:   new Color(0.82f, 0.14f, 0.14f), // threat red
+            maxHp:       80f,
+            maxShield:   0f,
+            moveSpeed:   3.5f,
+            radius:      0.45f,
+            dodgeDist:   0f,
+            dodgeDuration: 0f,
+            dodgeCooldown: 0f,
+            dodgeIFrames: 0f,
+            damageReductionFront: 0f
+        );
     }
 
     public enum CharacterRole
@@ -95,6 +113,7 @@ namespace HY3RIDOrigins.Data
         Hunter,
         Demolitions,
         LoneWolf,
+        Enemy,
     }
 
     [System.Serializable]

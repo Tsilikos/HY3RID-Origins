@@ -40,6 +40,17 @@ namespace HY3RIDOrigins.Combat
             mfGO.SetActive(false);
         }
 
+        // Override SerializeField defaults at runtime — used by enemy factory code.
+        public void Configure(float newDamage = 0f, float newFireRate = 0f,
+            float newProjectileSpeed = 0f, int newMagazineSize = 0, float newReloadDuration = 0f)
+        {
+            if (newDamage         > 0f) damage          = newDamage;
+            if (newFireRate       > 0f) fireRate         = newFireRate;
+            if (newProjectileSpeed > 0f) projectileSpeed = newProjectileSpeed;
+            if (newMagazineSize   > 0)  { magazineSize  = newMagazineSize; currentAmmo = newMagazineSize; }
+            if (newReloadDuration > 0f) reloadDuration   = newReloadDuration;
+        }
+
         // Returns true if a shot was fired. Called by WeaponHolder (player) or AIController.
         public bool TryFire(Vector2 origin, Vector2 direction)
         {

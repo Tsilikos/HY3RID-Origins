@@ -15,6 +15,7 @@ namespace HY3RIDOrigins.Rooms
         [SerializeField] private float roomWidth  = 48f;
         [SerializeField] private float roomHeight = 36f;
         [SerializeField] private float wallThickness = 1.5f;
+        [SerializeField] private float doorWidth = 4f; // gap in north wall for enemy entry
 
         [Header("References")]
         [SerializeField] private LabCamera labCamera;
@@ -26,8 +27,10 @@ namespace HY3RIDOrigins.Rooms
         [SerializeField] private Color machineryColor = new Color(0.090f, 0.145f, 0.200f); // #172533
         [SerializeField] private Color crateColor     = new Color(0.145f, 0.145f, 0.155f); // #252527
 
-        // Spawn point returned for external use (Leonidas start position)
+        // Leonidas spawn point (lower center of room).
         public Vector2 SpawnPoint { get; private set; }
+        // Enemy entry point — inner edge of the north-wall door gap.
+        public Vector2 DoorPosition { get; private set; }
 
         // Awake runs before any Start(), guaranteeing SpawnPoint is set when
         // LabSceneInitializer.Start() reads it — no script execution order dependency.
@@ -57,8 +60,8 @@ namespace HY3RIDOrigins.Rooms
             BuildWalls();
             BuildObstacles();
 
-            // Spawn point: lower center of the room (near the cage area)
-            SpawnPoint = new Vector2(0f, -roomHeight / 2f + 6f);
+            SpawnPoint   = new Vector2(0f, -roomHeight / 2f + 6f);
+            DoorPosition = new Vector2(0f, roomHeight / 2f - wallThickness);
         }
 
         // --- Floor ---
@@ -75,18 +78,40 @@ namespace HY3RIDOrigins.Rooms
 
         private void BuildWalls()
         {
-            float hw = roomWidth  / 2f;
-            float hh = roomHeight / 2f;
-            float wt = wallThickness;
+            float hw      = roomWidth  / 2f;
+            float hh      = roomHeight / 2f;
+            float wt      = wallThickness;
+            float gapHalf = doorWidth / 2f;
+            float northY  = hh - wt / 2f;
 
-            // North
-            BuildWall("Wall_N", new Vector2(0f, hh - wt / 2f),    new Vector2(roomWidth, wt));
-            // South
-            BuildWall("Wall_S", new Vector2(0f, -hh + wt / 2f),   new Vector2(roomWidth, wt));
-            // West
-            BuildWall("Wall_W", new Vector2(-hw + wt / 2f, 0f),   new Vector2(wt, roomHeight));
-            // East
-            BuildWall("Wall_E", new Vector2(hw - wt / 2f, 0f),    new Vector2(wt, roomHeight));
+            // North wall — split around the door gap
+            float sideWidth = hw - gapHalf;
+            BuildWall("Wall_N_L", new Vector2(-gapHalf - sideWidth / 2f, northY), new Vector2(sideWidth, wt));
+            BuildWall("Wall_N_R", new Vector2( gapHalf + sideWidth / 2f, northY), new Vector2(sideWidth, wt));
+
+            // Door visual (no collider — just marks the opening)
+            BuildDoorVisual(new Vector2(0f, northY), new Vector2(doorWidth, wt));
+
+            // South / West / East
+            BuildWall("Wall_S", new Vector2(0f, -hh + wt / 2f), new Vector2(roomWidth, wt));
+            BuildWall("Wall_W", new Vector2(-hw + wt / 2f, 0f), new Vector2(wt, roomHeight));
+            BuildWall("Wall_E", new Vector2( hw - wt / 2f, 0f), new Vector2(wt, roomHeight));
+        }
+
+        private void BuildDoorVisual(Vector2 pos, Vector2 size)
+        {
+            // A slightly lighter gap sprite — no collider, no ShadowCaster.
+            // Visually shows "there is a door here"; enemies pass through freely.
+            var go = new GameObject("Door_N");
+            go.transform.SetParent(transform);
+            go.transform.position = pos;
+
+            var sr = go.AddComponent<SpriteRenderer>();
+            sr.sprite   = CreateSolidSprite(1, 1);
+            sr.color    = new Color(0.030f, 0.040f, 0.060f); // slightly lighter than wall
+            sr.size     = size;
+            sr.drawMode = SpriteDrawMode.Tiled;
+            sr.sortingOrder = 1;
         }
 
         private void BuildWall(string label, Vector2 pos, Vector2 size)
